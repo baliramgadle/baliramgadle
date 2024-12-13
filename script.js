@@ -9,8 +9,3 @@ menuIcon.addEventListener('click', () => {
     navLinks.classList.toggle('active');
     menuIcon.classList.toggle('active');
 });
-
-main.addEventListener('click', ()=>{
-    navLinks.classList.remove('active');
-    menuIcon.classList.remove('active');
-});
