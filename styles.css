@@ -83,7 +83,7 @@ nav .logo h2 {
 }
 
 .nav-links li a:hover {
-    color: #0043FF;
+    color: #1DA1F2;
 }
 
 /* Menu icon styles for small devices */
@@ -129,14 +129,14 @@ footer {
 }
 
 .footer-icons a:hover {
-    color: #0043FF;
+    color: #1DA1F2;
     transform: scale(1.5);
 }
 
 .footer-icons a:last-child:hover {
     color: red;
 }
-.footer-icons a:nth-child(2):hover,.footer-icons a:nth-child(4):hover, {
+.footer-icons a:nth-child(2):hover, .footer-icons a:nth-child(4):hover {
     color: #ffffff;
 }
 
