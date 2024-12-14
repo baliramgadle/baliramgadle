@@ -136,6 +136,9 @@ footer {
 .footer-icons a:last-child:hover {
     color: red;
 }
+.footer-icons a:nth-child(2):hover,.footer-icons a:nth-child(4):hover, {
+    color: #ffffff;
+}
 
 .footer-icons a:nth-child(3):hover {
     background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4);
