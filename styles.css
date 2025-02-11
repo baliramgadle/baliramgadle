@@ -327,7 +327,7 @@ section.section-card:hover {
 
 .card-slot {
     margin: auto;
-    min-width: 290px;
+    min-width: 280px;
     min-height: clamp(300px, 350px, 370px);
     background: white;
     padding: 20px;
@@ -337,7 +337,7 @@ section.section-card:hover {
 }
 
 .card-slot:hover {
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 5px rgba(0, 0, 0, 0.3);
 }
 
 .card {
