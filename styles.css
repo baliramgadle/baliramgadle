@@ -319,8 +319,8 @@ section.section-card:hover {
 }
 .card-grid {
     margin-top: 30px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
 }
 
@@ -328,6 +328,8 @@ section.section-card:hover {
     margin: auto;
     background: white;
     padding: 20px;
+    width: 270px;
+    flex-grow: 1;
     border-radius: 5px;
     box-shadow: 0 3px 5px 3px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
