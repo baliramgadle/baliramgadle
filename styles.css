@@ -328,7 +328,7 @@ section.section-card:hover {
     margin: auto;
     width: 20%;
     min-width: 290px;
-    min-height: clamp(300px, auto, 350px);
+    min-height: clamp(300px, 100%, 350px);
     background: white;
     padding: 20px;
     border-radius: 15px;
