@@ -331,13 +331,13 @@ section.section-card:hover {
     min-height: clamp(300px, 350px, 370px);
     background: white;
     padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    box-shadow: 0 3px 5px 5px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card-slot:hover {
-    box-shadow: 0 10px 5px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 3px 5px 5px rgba(0, 0, 0, 0.3);
 }
 
 .card {
