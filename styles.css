@@ -323,13 +323,12 @@ section.section-card:hover {
     grid-auto-rows: minmax(300px, auto);
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 2rem;
-    align-items: stretch;
 }
 
 .card-slot {
     margin: auto;
     min-width: 280px;
-    min-height: clamp(300px, 350px, 370px);
+    min-height: 300px;
     background: white;
     padding: 20px;
     border-radius: 5px;
