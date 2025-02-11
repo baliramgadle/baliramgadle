@@ -320,7 +320,7 @@ section.section-card:hover {
 .card-grid {
     margin-top: 30px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(270, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(270, 1fr));
     gap: 1rem;
 }
 
