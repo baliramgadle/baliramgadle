@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ambajogai Local Food Delivery — Detailed Plan & Cost Report</title>
+  <style>
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;margin:24px;color:#0f172a;background:#f8fafc}
+    header{background:#0b5fff;color:#fff;padding:24px;border-radius:12px}
+    h1,h2,h3{margin:0 0 12px 0}
+    section{background:#fff;padding:18px;border-radius:10px;margin-top:18px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px;border-bottom:1px solid #eef2ff;text-align:left}
+    .muted{color:#475569;font-size:0.95rem}
+    .kpi{display:inline-block;padding:8px 12px;background:#eef2ff;border-radius:8px;margin-right:8px}
+    pre{background:#0b1220;color:#e6f0ff;padding:12px;border-radius:8px;overflow:auto}
+    .mono{font-family:monospace,ui-monospace}
+    ul{margin:6px 0 6px 18px}
+    .note{background:#fff7ed;color:#92400e;padding:10px;border-radius:8px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Ambajogai — Local Food Delivery Marketplace</h1>
+    <div class="muted">Detailed technical + business report (MERN, web-first launch). Prepared for: you & your partner. Date: August 10, 2025</div>
+  </header>
+
+  <section>
+    <h2>Executive summary</h2>
+    <p class="muted">You and your partner will handle design, development, marketing and operations. This report assumes you will self-build the platform and therefore covers only technical infrastructure costs, 3rd-party service costs, operational flows, referral economics (₹150+ rules), legal checklist, deployment plan, data & API design, and financial scenarios for Ambajogai launch.</p>
+
+    <div style="margin-top:12px">
+      <span class="kpi">Referral threshold: ₹150+</span>
+      <span class="kpi">Platform commission on items: 25% (20% commission + 5% maintenance)</span>
+      <span class="kpi">Merchant share: 70%</span>
+      <span class="kpi">Referral pool: 5% (non-withdrawable coins, only redeemable on future purchases)</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Key assumptions used in calculations</h2>
+    <ul>
+      <li><strong>Average order value (AOV):</strong> ₹250 (useable baseline — change to model other cases)</li>
+      <li><strong>Referral rule:</strong> order must be ≥ ₹150 to trigger referral coin distribution. Coins are non-withdrawable and usable only as discounts on future orders.</li>
+      <li><strong>Platform splits:</strong> From the item price only: Merchant 70%, Referral pool 5%, Platform (commission + maintenance) 25%.</li>
+      <li><strong>Delivery fee:</strong> charged to customer separately (distance-based). Platform keeps a small handling fee (₹5–₹10) per order; remaining paid to rider.</li>
+      <li><strong>Payment gateway fee:</strong> average 1.8% of GMV assumed (mix of UPI and cards). Adjust when you select final gateway.</li>
+      <li><strong>Maps calls & SMS:</strong> billable third-party usage — included in infrastructure cost lines below.</li>
+      <li><strong>Conversion / Currency:</strong> all numbers are INR unless marked. USD figures shown for common cloud prices where providers publish USD pricing.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Referral economics (precise)</h2>
+    <p class="muted">Goal: give coins only for orders ₹150+, maintain an overall referral budget capped at 5% of the item order value, avoid cash payouts to reduce abuse and legal risk.</p>
+
+    <h3>Distribution model</h3>
+    <ul>
+      <li>Total referral budget per qualifying order = 5% × item_price</li>
+      <li>Distribution across up to 5 levels (configurable). For a safe, conservative start we recommend <strong>2 levels</strong> live and reserve levels 3–5 for future if fraud is controlled. Example split (when using 5 levels) — L1=50%, L2=20%, L3=15%, L4=10%, L5=5% (applied to the referral budget).</li>
+    </ul>
+
+    <h3>Worked example (₹250 order — qualifies)</h3>
+    <pre class="mono">Item price = ₹250
+Referral budget = 5% × 250 = ₹12.50
+Distribution example (5-level):
+  L1 (50%) = 0.5 × 12.5 = ₹6.25 -> round to ₹6
+  L2 (20%) = 0.2 × 12.5 = ₹2.50 -> ₹3
+  L3 (15%) = 1.875 -> ₹2
+  L4 (10%) = 1.25 -> ₹1
+  L5 (5%) = 0.625 -> ₹1 (or ₹0 depending on rounding rule)
+Total ≈ ₹13 (rounding small differences handled by platform reserve)
+Notes: coins issued are 'platform-credit' with monetary equivalence for UX only; coins are redeemable as discounts on future orders only. Coins expire in 90 days by default.</pre>
+
+    <div class="note" style="margin-top:8px">Important: because coins are non-withdrawable and usable only against purchases, they count as discounts (marketing expense) rather than cash payouts. This reduces legal/regulatory scrutiny compared to cash commissions across levels.</div>
+  </section>
+
+  <section>
+    <h2>Platform money flow (one order)</h2>
+    <ol>
+      <li>Customer pays: item_price (P) + delivery_fee (D) + taxes.</li>
+      <li>Payment gateway collects funds and settles net to platform (or using split-payments, splits to merchant & platform according to rules).</li>
+      <li>From item_price P:
+        <ul>
+          <li>Merchant receives 70% of P (after marketplace settlement & taxes).</li>
+          <li>Referral pool receives 5% of P (credited as coins to qualifying referrers according to referral ledger rules).</li>
+          <li>Platform retains 25% of P (20% commission + 5% maintenance) as revenue.</li>
+        </ul>
+      </li>
+      <li>Delivery fee D: collected from customer; platform keeps handling fee (₹5–10) and pays remaining D to rider (or to courier partner if outsourced).</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Technical architecture (MERN, minimal components)</h2>
+    <p class="muted">Simple, scalable components for a local-first web-only MVP (PWA-ready):</p>
+    <ul>
+      <li><strong>Frontend:</strong> React + Tailwind CSS (PWA support for offline & web-push). Single codebase deployed to static hosting (CDN) with an API server.</li>
+      <li><strong>Backend:</strong> Node.js + Express (REST) + Socket.IO for real-time order updates.</li>
+      <li><strong>Database:</strong> MongoDB Atlas (start with free/low-tier cluster). Use collections: users, merchants, orders, riders, referralLedger, settlements.</li>
+      <li><strong>Cache / Jobs:</strong> Redis for caching, rate-limits & short locks. Use a task queue (BullMQ or similar) for background jobs (settlement, email/SMS batching).</li>
+      <li><strong>Storage:</strong> S3-compatible (DigitalOcean Spaces / AWS S3) for images and receipt files.</li>
+      <li><strong>Third parties:</strong> Payment Gateway (Razorpay/Cashfree), Maps (Mapbox or Google Maps), SMS (MSG91), Push (Firebase Cloud Messaging), Email (SendGrid).</li>
+      <li><strong>Deployment:</strong> Docker + Nginx reverse-proxy. Start with 1-2 droplets (or small VM instances) and upgrade as usage grows. Optionally use managed Kubernetes if you expect rapid scaling.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Data model (MongoDB collections sketch)</h2>
+    <pre class="mono">users { _id, name, phone, email, referralCode, referredBy, wallet:{coins, history[]}, createdAt }
+merchants { _id, name, address, fssai, menu:[{itemId,name,price,variants}], payoutAccount, rating, createdAt }
+orders { _id, userId, merchantId, items[], itemTotal, deliveryFee, tax, grandTotal, status, riderId, referralUsed, timestamps }
+riders { _id, name, phone, vehicle, earnings, status }
+referralLedger { _id, orderId, fromUser, toUser, level, coins, status, issuedAt }
+settlements { _id, merchantId, periodStart, periodEnd, gross, platformShare, referralShare, payoutAmount }
+</pre>
+  </section>
+
+  <section>
+    <h2>API endpoints (essential)</h2>
+    <pre class="mono">POST /api/auth/otp/request -> send OTP
+POST /api/auth/otp/verify -> verify & create session
+GET  /api/merchants -> list merchants (query: location, category)
+GET  /api/merchant/:id/menu -> get menu
+POST /api/cart/checkout -> start checkout (calculates delivery fee & estimates)
+POST /api/payment/webhook -> payment gateway webhook (idempotent)
+POST /api/orders/:id/assign -> assign rider
+POST /api/rider/:id/status -> rider updates (pickup/deliver)
+GET  /api/user/wallet -> wallet & coins
+POST /api/referral/redeem -> apply coins/referral code
+GET  /api/admin/settlements -> admin reconciliation tools
+</pre>
+
+    <div class="muted">(Implement strict idempotency and webhook verification for payments.)</div>
+  </section>
+
+  <section>
+    <h2>Infrastructure & pricing (detailed)</h2>
+    <p class="muted">Costs below show one-time and recurring technical costs you must budget for since development itself will be handled by you and your partner.</p>
+
+    <h3>One-time setup</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Estimate (INR)</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Domain (.com or .in)</td><td>₹800 – ₹1,500 / year</td><td>Registrar pricing varies; choose .in for local branding if desired.</td></tr>
+        <tr><td>SSL certificate</td><td>₹0 – ₹3,000</td><td>Use Let's Encrypt (free) for most cases; paid cert optional.</td></tr>
+        <tr><td>MongoDB Atlas initial setup (paid cluster optional)</td><td>Free – ₹3,000</td><td>Start on free tier; upgrade when needed.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Monthly recurring (small-city MVP)</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Estimate / month (INR)</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>App server (1 small droplet / VM)</td><td>₹350 – ₹1,200</td><td>DigitalOcean droplets start from ~$4–6/month. Use two small instances for redundancy if budget allows.</td></tr>
+        <tr><td>Managed DB (small Atlas cluster)</td><td>₹0 – ₹3,000</td><td>Free for small usage; paid cluster for production reliability.</td></tr>
+        <tr><td>Storage (images) & CDN</td><td>₹300 – ₹2,000</td><td>DigitalOcean Spaces or S3; CDN via Cloudflare free tier recommended.</td></tr>
+        <tr><td>Maps & routing (Google / Mapbox)</td><td>₹1,000 – ₹15,000+</td><td>Highly variable: depends on geocoding, distance-matrix and routing calls. Start with Mapbox to reduce cost and move to Google if needed.</td></tr>
+        <tr><td>SMS (OTP & transactional)</td><td>₹1,000 – ₹8,000</td><td>MSG91/Twilio: OTPs + critical messages only (use push notifications for most updates).</td></tr>
+        <tr><td>Monitoring & error tracking</td><td>₹500 – ₹3,000</td><td>Sentry, Prometheus/Grafana hosted costs.</td></tr>
+        <tr><td>Payment gateway fees</td><td>~1.5% – 2.5% of GMV (variable)</td><td>Not a fixed monthly cost; appears on transaction basis.</td></tr>
+      </tbody>
+    </table>
+
+    <p class="muted">Conservative estimate monthly total for MVP (technical costs only): <strong>₹4,000 – ₹32,000</strong>. The primary cost driver is Maps & SMS usage which scale with order volume.</p>
+  </section>
+
+  <section>
+    <h2>Financial scenarios (3 volumes) — detailed</h2>
+    <p class="muted">Baseline: AOV ₹250. Platform item-split: platform keeps 25% of item price; referral pool 5% (coins); merchant 70%. Delivery fee collected separately.</p>
+
+    <h3>Scenario A — Launch conservative (50 orders/day)</h3>
+    <table>
+      <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Daily GMV (item price) = orders × AOV</td><td>50 × ₹250 = ₹12,500</td></tr>
+        <tr><td>Monthly GMV (~30 days)</td><td>₹3,75,000</td></tr>
+        <tr><td>Platform take (25% of item price)</td><td>0.25 × 3,75,000 = ₹93,750</td></tr>
+        <tr><td>Referral pool (5%)</td><td>0.05 × 3,75,000 = ₹18,750 (coins issued as discounts)</td></tr>
+        <tr><td>Payment fees (~1.8%)</td><td>~₹6,750</td></tr>
+        <tr><td>Technical monthly costs (estimate)</td><td>₹6,000</td></tr>
+        <tr><td>Net before taxes & salaries</td><td>93,750 - 6,750 - 6,000 = ₹81,000</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Scenario B — Moderate (100 orders/day)</h3>
+    <table>
+      <tbody>
+        <tr><td>Monthly GMV</td><td>₹7,50,000</td></tr>
+        <tr><td>Platform take (25%)</td><td>₹1,87,500</td></tr>
+        <tr><td>Referral pool (5%)</td><td>₹37,500</td></tr>
+        <tr><td>Payment fees (~1.8%)</td><td>~₹13,500</td></tr>
+        <tr><td>Technical monthly costs</td><td>₹10,000</td></tr>
+        <tr><td>Net before taxes & salaries</td><td>1,87,500 - 13,500 - 10,000 = ₹164,000</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Scenario C — High (200 orders/day)</h3>
+    <table>
+      <tbody>
+        <tr><td>Monthly GMV</td><td>₹15,00,000</td></tr>
+        <tr><td>Platform take (25%)</td><td>₹3,75,000</td></tr>
+        <tr><td>Referral pool (5%)</td><td>₹75,000</td></tr>
+        <tr><td>Payment fees (~1.8%)</td><td>~₹27,000</td></tr>
+        <tr><td>Technical monthly costs</td><td>₹20,000</td></tr>
+        <tr><td>Net before taxes & salaries</td><td>3,75,000 - 27,000 - 20,000 = ₹328,000</td></tr>
+      </tbody>
+    </table>
+
+    <p class="muted">These numbers assume you and your partner do not take salary as development cost. Once salaries/outsourced ops are introduced, margin will reduce. Taxes, GST, TDS/TCS and other statutory obligations are not included — consult a CA for precise calculations.</p>
+  </section>
+
+  <section>
+    <h2>Legal & compliance checklist (actionable)</h2>
+    <ol>
+      <li>Register entity (LLP or Pvt Ltd). Budget ₹10k–₹40k for registration + professional fees.</li>
+      <li>GST registration if threshold met or operating interstate; implement GST invoicing in settlements.</li>
+      <li>Merchant FSSAI verification: require merchants to upload FSSAI during onboarding.</li>
+      <li>Payment gateway KYC & bank details for merchant payouts (Razorpay / Cashfree onboarding).</li>
+      <li>Referral T&Cs: publish clear rules — coins non-withdrawable, expire in 90 days, coins only for qualifying orders (₹150+), and anti-abuse clause.</li>
+      <li>Privacy policy & terms: minimal data collection, retention schedule, DPDP considerations; keep consent logs.</li>
+      <li>Data backups & access control: enforce least privilege and maintain daily backups (off-site snapshots).</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Operational plan (roles & responsibilities)</h2>
+
+    <h3>You & partner (primary operators)</h3>
+    <ul>
+      <li>All development & design, feature implementation, bug fixes and deployment.</li>
+      <li>Technical on-call (uptime monitoring, deployments, DB ops).</li>
+      <li>Merchant onboarding & local sales: negotiate terms, collect FSSAI & bank details.</li>
+      <li>Rider hiring & basic training, rider payments reconciliation.</li>
+      <li>Local marketing & promotions (flyers, merchant co-marketing, campus deals).</li>
+    </ul>
+
+    <h3>Admin (initially you; scale to part-time hire)</h3>
+    <ul>
+      <li>Order monitoring & dispute resolution, manual refunds as needed.</li>
+      <li>Daily reconciliation of payments (gateway vs platform ledger vs merchant payout schedule).</li>
+    </ul>
+
+    <h3>Future hires (6–12 months)</h3>
+    <ul>
+      <li>Customer support (1 full time), Ops / rider manager, CA for monthly bookkeeping & tax filings.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Go-to-market & merchant acquisition (practical)</h2>
+    <ol>
+      <li>Identify 8–12 anchor merchants (popular local restaurants) and offer 0% commission for first 30 days or waived onboarding fee to create supply-side liquidity.</li>
+      <li>Offer riders guaranteed first-week incentives to ensure fast deliveries at launch.</li>
+      <li>Local promotions: college discounts, festival offers, posters, reseller merchant cross-promos.</li>
+      <li>Track activation & retention metrics: % of customers who use coins within 30 days, 1st-to-2nd order retention, merchant repeat orders/week.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Fraud controls & safety</h2>
+    <ul>
+      <li>OTP + device fingerprinting + rate limits at signup to prevent multi-account creation.</li>
+      <li>Referral anti-abuse: reject same-device or same-IP chain referrals for coin issuance; flag suspicious accounts for manual review.</li>
+      <li>Limit coin issuance per referrer per month (e.g., max ₹2,000 in coins) to curb abuse.</li>
+      <li>Require first successful non-refunded delivery to unlock referral earnings for referrer.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Detailed 12-week MVP plan (milestones)</h2>
+    <ol>
+      <li>Week 1–2: finalize wireframes, merchant onboarding flow, payment & maps account signups, domain + cert, basic infra provisioning.</li>
+      <li>Week 3–6: build core customer flows, merchant dashboard, order lifecycle & payments, basic rider PWA, referral ledger logic (2-level initial), unit testing.</li>
+      <li>Week 7–9: integrate SMS & push, implement reconciliation & settlements, admin panels, basic analytics & error tracking.</li>
+      <li>Week 10–12: alpha pilot with 8–12 merchants in Ambajogai, refine UX, fix bugs, finalize referral anti-fraud rules, prepare SOP for merchant and rider onboarding.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Appendix — Quick checklists & operational templates</h2>
+    <h3>Merchant onboarding checklist</h3>
+    <ul>
+      <li>FSSAI copy</li>
+      <li>Bank account details (for payouts)</li>
+      <li>Menu items with photos</li>
+      <li>Operating hours & pickup time estimates</li>
+      <li>Primary contact & alternate number</li>
+    </ul>
+
+    <h3>Minimum viable referral T&amp;C (short form)</h3>
+    <p class="muted">"Referral coins are issued only for completed orders of ₹150 or higher. Coins are non-withdrawable and redeemable only as discounts on future orders on this platform. Coins expire after 90 days. Platform reserves the right to withhold coins in case of suspected abuse."
+    </p>
+
+    <h3>Onboarding script for riders</h3>
+    <ol>
+      <li>Collect ID & vehicle details</li>
+      <li>Explain order workflow, pickup & drop OTP, proof of delivery (photo) rules</li>
+      <li>Explain payment & payout schedule for ride earnings</li>
+    </ol>
+  </section>
+
+  <footer style="margin-top:20px;text-align:center;color:#94a3b8">
+    <div>Report generated by your assistant. If you want a downloadable HTML file or a printable PDF, tell me and I'll export it for you.</div>
+  </footer>
+</body>
+</html>

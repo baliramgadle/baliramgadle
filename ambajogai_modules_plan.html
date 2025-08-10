@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ambajogai — Modules Plan & Detailed Feature Descriptions</title>
+  <style>
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;margin:20px;color:#0b1320;background:#f7fafc}
+    header{background:#0b5fff;color:#fff;padding:22px;border-radius:12px}
+    h1{margin:0 0 6px 0}
+    .muted{color:#475569}
+    section{background:#fff;padding:18px;border-radius:10px;margin-top:16px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    h2{margin-top:0}
+    .module{border-left:4px solid #0b5fff;padding:12px;margin:12px 0;border-radius:6px;background:#fbfdff}
+    ul{margin:8px 0 8px 20px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:8px;border-bottom:1px solid #eef2ff;text-align:left}
+    .prio{display:inline-block;padding:6px 10px;border-radius:8px;background:#eef2ff;color:#0b5fff;margin-right:8px}
+    pre{background:#0b1220;color:#e6f0ff;padding:12px;border-radius:8px;overflow:auto}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Ambajogai — Modules Plan & Feature Descriptions</h1>
+    <div class="muted">Comprehensive module-by-module breakdown for the MERN web-first marketplace (PWA-ready). Use this as a developer-spec + product guide.</div>
+  </header>
+
+  <section>
+    <h2>Overview</h2>
+    <p class="muted">This document breaks the entire product into modules with detailed features, data touchpoints, API notes, acceptance criteria, priority, and implementation notes. Each module is intended to be delivered independently and integrated via the central API layer. The modules are ordered by recommended implementation priority for an efficient MVP launch.</p>
+  </section>
+
+  <section>
+    <h2>Module list & priorities</h2>
+    <div class="module"><strong>Core (MVP)</strong>
+      <ul>
+        <li>Authentication & Authorization (MVP-high)</li>
+        <li>Customer (Web + PWA) (MVP-high)</li>
+        <li>Merchant Dashboard (MVP-high)</li>
+        <li>Order Management & Lifecycle (MVP-high)</li>
+        <li>Payments & Settlement (MVP-high)</li>
+        <li>Referral & Wallet (MVP-medium)</li>
+        <li>Rider PWA / Dispatcher (MVP-medium)</li>
+        <li>Admin & Operations (MVP-medium)</li>
+      </ul>
+    </div>
+
+    <div class="module"><strong>Enhancements (post-MVP)</strong>
+      <ul>
+        <li>Search & Discovery / Filters (post)</li>
+        <li>Analytics & Reporting (post)</li>
+        <li>Promotions & Offer Engine (post)</li>
+        <li>Notifications & Messaging (post)
+        <li>Monitoring, Logging & SRE (post)</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Module details</h2>
+
+    <h3>1. Authentication & Authorization</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> High (MVP)</p>
+      <p><strong>Purpose:</strong> Secure user identification for customers, merchants, riders and admins. Provide session management, role-based access, and KYC hooks for merchant/rider onboarding.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Phone-based OTP login (primary) and email/password fallback.</li>
+        <li>Session tokens via JWT (short lived access + refresh tokens).</li>
+        <li>Role-based access control (roles: customer, merchant-admin, rider, ops, finance, super-admin).</li>
+        <li>2FA + device fingerprinting (optional for admin / high value accounts).</li>
+        <li>Account verification flow for merchants and riders (upload FSSAI / ID docs).</li>
+        <li>Account recovery, change phone/email workflows, logout everywhere.</li>
+      </ul>
+
+      <h4>Data touchpoints & APIs</h4>
+      <ul>
+        <li>POST /auth/otp/request — send OTP</li>
+        <li>POST /auth/otp/verify — verify & return JWT</li>
+        <li>GET /auth/me — get current user</li>
+        <li>POST /auth/refresh — refresh token</li>
+      </ul>
+
+      <h4>Acceptance criteria</h4>
+      <ul>
+        <li>OTP must expire in configurable time (e.g., 5 minutes).</li>
+        <li>JWT revocation on password change or logout all.
+        <li>Role-based endpoints reject unauthorized roles with 403.</li>
+      </ul>
+    </div>
+
+    <h3>2. Customer (Web + PWA)</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> High (MVP)</p>
+      <p><strong>Purpose:</strong> Customer-facing app for browsing merchants, ordering, applying coins, tracking, and history.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Landing & local discovery by pin / area.</li>
+        <li>Merchant listing: search, category filters, open now, ratings, offers.</li>
+        <li>Menu pages: items, variants, add-ons, images, custom notes.</li>
+        <li>Cart & checkout: address selection/autocomplete, delivery fee estimate, payment methods, tip, apply coins/referral code, confirm order.</li>
+        <li>Order tracking: order timeline with timestamps, rider live tracking (map snapshot or link), ETA notifications (push/SMS).</li>
+        <li>Profile & wallet: view coins, transaction history, referral status, saved addresses.</li>
+        <li>Ratings & feedback for delivered orders.</li>
+      </ul>
+
+      <h4>Data & API endpoints (sample)</h4>
+      <ul>
+        <li>GET /merchants?lat=&amp;lng=&amp;radius= — list nearby merchants</li>
+        <li>GET /merchant/:id/menu — fetch menu</li>
+        <li>POST /cart/checkout — calculate fees, reserve order, return payment token</li>
+        <li>POST /orders — place order</li>
+      </ul>
+
+      <h4>Acceptance criteria</h4>
+      <ul>
+        <li>Checkout must display exact item total, delivery fee, taxes, and coins applied before payment.</li>
+        <li>Order placement must be idempotent: repeated calls must not create duplicates.</li>
+        <li>Applied coins must be validated against ledger and reduce atomically during checkout.</li>
+      </ul>
+    </div>
+
+    <h3>3. Merchant Dashboard (Web)</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> High (MVP)</p>
+      <p><strong>Purpose:</strong> Allow merchants to manage menu, accept orders, view analytics, request payouts, and view disputes.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Merchant onboarding flow with FSSAI upload & bank details.</li>
+        <li>Menu management: categories, items, stock status, prep time, add-ons, images.</li>
+        <li>Incoming orders queue (real-time): accept/reject, prepare time input, status updates.</li>
+        <li>Order history & sales reports (daily/weekly/monthly), commission breakdown and GST invoices.</li>
+        <li>Payout requests & history (integration with payout provider for auto-settlement).</li>
+        <li>Promotions management (basic) for featured listing.</li>
+      </ul>
+
+      <h4>APIs & data</h4>
+      <ul>
+        <li>POST /merchant/:id/menu — create/update menu</li>
+        <li>GET /merchant/:id/orders?status=placed — active orders</li>
+        <li>POST /merchant/:id/orders/:orderId/status — update status</li>
+      </ul>
+
+      <h4>Acceptance criteria</h4>
+      <ul>
+        <li>Merchant must be able to set accurate prep times and close items/out-of-stock instantly.</li>
+        <li>Admin/manual override for fraudulent orders or disputes must be available.</li>
+      </ul>
+    </div>
+
+    <h3>4. Order Management & Dispatch</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> High (MVP)</p>
+      <p><strong>Purpose:</strong> Orchestrate order lifecycle, assign riders, and ensure robust state transitions and reconciliation.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Order states: PLACED → CONFIRMED → PREPARING → READY → ASSIGNED → PICKED_UP → DELIVERED → CLOSED/REFUNDED.</li>
+        <li>Auto-dispatch algorithm: find closest available rider by ETA + load balancing; manual override in admin panel.</li>
+        <li>Rider acceptance window + auto-assign fallback logic.</li>
+        <li>Delivery proof: OTP, photo on delivery, signature (optional).</li>
+        <li>Retry & escalation logic for failed deliveries (schedule return, refund path).</li>
+      </ul>
+
+      <h4>APIs</h4>
+      <ul>
+        <li>POST /dispatch/assign — algorithmic assignment</li>
+        <li>PATCH /orders/:id/status — state transitions with audit logs</li>
+        <li>GET /orders/:id/tracking — timeline & rider location</li>
+      </ul>
+
+      <h4>Acceptance criteria</h4>
+      <ul>
+        <li>State transitions logged with actor ID and timestamp.</li>
+        <li>Auto-assign attempts & results recorded for audit & performance tuning.</li>
+      </ul>
+    </div>
+
+    <h3>5. Payments & Settlement</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> High (MVP)</p>
+      <p><strong>Purpose:</strong> Securely accept payments, split settle, manage refunds and produce settlement reports for merchants.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Integration with gateway that supports marketplace split payouts (Razorpay/Cashfree).</li>
+        <li>Hold unsettled funds until order delivered to prevent fraud.</li>
+        <li>Automated merchant settlements (daily/weekly) with invoices and commission breakdown.</li>
+        <li>Refund flow & chargeback reconciliation tools in admin panel.</li>
+      </ul>
+
+      <h4>APIs & considerations</h4>
+      <ul>
+        <li>POST /payments/initiate — return PG token / redirect</li>
+        <li>POST /payments/webhook — payment events (idempotent, verified)</li>
+        <li>GET /finance/settlements — generate merchant settlement file</li>
+      </ul>
+
+      <h4>Acceptance criteria</h4>
+      <ul>
+        <li>Settlement amounts reconcile with PG statements within 24–48 hours.</li>
+        <li>Refunds properly update referral ledger and coins where required.</li>
+      </ul>
+    </div>
+
+    <h3>6. Referral & Wallet (Coins)</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> Medium (MVP)</p>
+      <p><strong>Purpose:</strong> Multi-level referral ledger (up to 5 levels configurable) with coins as non-withdrawable credits usable only on future orders. Triggered only for orders ≥ ₹150.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Referral code generation & sharing UI (link + code + QR).</li>
+        <li>Referral ledger: store each eligible order's referral events (orderId, fromUser, toUser, level, coinsIssued, status).</li>
+        <li>Qualification rules: coins issued only after order delivered (no refund) and order >= ₹150.</li>
+        <li>Coin redemption: during checkout, validate & atomically deduct coins from wallet; enforce redeem rules (max % per order, min order value after coin usage).</li>
+        <li>Expiry & caps: coins expire after X days (90), monthly earning caps per user to limit abuse.</li>
+      </ul>
+
+      <h4>APIs & ledger sample</h4>
+      <ul>
+        <li>POST /referral/apply — apply referral code (first order link)</li>
+        <li>POST /referral/issue — internal call after order delivered to credit coins</li>
+        <li>POST /wallet/redeem — deduct coins during checkout</li>
+      </ul>
+
+      <h4>Acceptance criteria</h4>
+      <ul>
+        <li>Coins must not be withdrawable. UI shows coins as "₹ equivalent for discount only".</li>
+        <li>Double-issuance prevented via unique ledger entries per order + idempotent webhooks.</li>
+      </ul>
+    </div>
+
+    <h3>7. Rider PWA / Dispatcher</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> Medium (MVP)</p>
+      <p><strong>Purpose:</strong> Lightweight PWA for riders to accept deliveries, navigate, and update statuses; dispatcher interface for manual assignment & monitoring.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Rider onboarding & KYC upload.</li>
+        <li>Job list: accept/reject, view pickup & drop location, navigation link (maps), time estimates.</li>
+        <li>Status updates & delivery proof (OTP/photo), earnings dashboard.</li>
+        <li>Dispatcher view for ops to monitor rider locations, assign manually, and reassign failed jobs.</li>
+      </ul>
+
+      <h4>Acceptance criteria</h4>
+      <ul>
+        <li>Rider cannot mark delivered until OTP matches and optional delivery photo uploaded if required.</li>
+        <li>Dispatcher must be able to reassign unaccepted jobs within 30 seconds of timeout.</li>
+      </ul>
+    </div>
+
+    <h3>8. Admin & Operations</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> Medium (MVP)</p>
+      <p><strong>Purpose:</strong> Manage merchants, riders, orders, disputes, finance and referral audits.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Dashboard: high-level KPIs (orders/hour, GMV, top merchants, active riders).</li>
+        <li>Merchant & rider onboarding approvals with document viewer.</li>
+        <li>Order timeline & dispute resolution workflow (refund approvals, manual coin adjustments).</li>
+        <li>Settlement management: adjust payout schedules, manual payouts, refunds & TDS withholding support.</li>
+        <li>Referral ledger audit & suspicious activity flags.</li>
+      </ul>
+
+      <h4>Acceptance criteria</h4>
+      <ul>
+        <li>Admins can issue manual refunds and adjust referral coins (with audit log showing reason & actor).</li>
+        <li>All admin actions logged with user ID & timestamp for compliance.</li>
+      </ul>
+    </div>
+
+    <h3>9. Search & Discovery (post-MVP)</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> Post-MVP</p>
+      <p><strong>Purpose:</strong> Fast merchant and item search with filters, autosuggest, and relevance ranking.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Autocomplete search with typo-tolerance (Elasticsearch or Algolia / MeiliSearch).</li>
+        <li>Filters: cuisine, price-range, delivery-time, ratings, offers.</li>
+        <li>Personalized results based on order history & popularity.</li>
+      </ul>
+
+      <h4>Acceptance criteria</h4>
+      <ul>
+        <li>Search results must return in < 200ms for common queries under medium traffic.</li>
+      </ul>
+    </div>
+
+    <h3>10. Analytics, Reporting & Growth Tools (post-MVP)</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> Post-MVP</p>
+      <p><strong>Purpose:</strong> Data-driven growth: funnel metrics, retention cohorts, LTV, RPU, referral conversion tracking.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Basic dashboards: orders/day, GMV, avg order value, coins issued vs redeemed.</li>
+        <li>Cohort analysis: 1st → 2nd order retention, retention curves, top merchants by conversion.</li>
+        <li>Exportable CSV reports for finance & merchant payouts.</li>
+      </ul>
+    </div>
+
+    <h3>11. Notifications & Messaging</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> Post-MVP</p>
+      <p><strong>Purpose:</strong> Reliable multi-channel messaging: FCM for push, SMS for OTPs & critical alerts, email for receipts.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Template-driven messages for order events (placed, accepted, dispatched, delivered).</li>
+        <li>Opt-in preferences & quiet hours (to reduce spam).</li>
+      </ul>
+    </div>
+
+    <h3>12. Monitoring, Logging & SRE</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> Post-MVP / must for production</p>
+      <p><strong>Purpose:</strong> Keep platform healthy and get alerted on incidents.</p>
+
+      <h4>Features</h4>
+      <ul>
+        <li>Uptime monitoring (endpoint checks), error tracking (Sentry), and basic metrics (Prometheus + Grafana or managed alternative).</li>
+        <li>Log retention & searchability (ELK or hosted alternatives) for audits and disputes.</li>
+        <li>Automated daily backups for DB & storage snapshots; automated restore drills monthly.</li>
+      </ul>
+    </div>
+
+    <h3>13. Security & Compliance</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> High for production</p>
+      <ul>
+        <li>HTTPS + HSTS, secure cookie flags & CSP headers.</li>
+        <li>Input validation & rate limiting, OWASP top 10 mitigations.</li>
+        <li>PG webhook verification & secure storage of sensitive keys in vault (e.g., AWS Secrets Manager / HashiCorp Vault).</li>
+        <li>Privacy policy & minimal data collection; store explicit consent for marketing and referrals.</li>
+      </ul>
+    </div>
+
+    <h3>14. Deployment & DevOps</h3>
+    <div class="module">
+      <p><strong>Priority:</strong> High</p>
+      <ul>
+        <li>CI/CD pipelines: run tests, linting & build, auto-deploy to staging, manual promotion to production.</li>
+        <li>Blue/green or rolling deploys for updates to avoid downtime.</li>
+        <li>Infrastructure as code for reproducibility (Terraform / DO API scripts).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Cross-cutting concerns</h2>
+    <ul>
+      <li><strong>Idempotency:</strong> All external webhooks (payment, PG) must be idempotent and stored with unique transaction IDs.</li>
+      <li><strong>Audit & Logging:</strong> Every financial or referral coin change must be auditable with reason, actor and timestamp.</li>
+      <li><strong>Performance:</strong> Cache merchant & menu data aggressively; keep hot caches for top merchants and popular items.</li>
+      <li><strong>Testing:</strong> Unit tests for business logic, integration tests for payments & maps, E2E flows for order lifecycle.</li>
+      <li><strong>Feature flags:</strong> Use flags for rollout of referral levels and promotional experiments.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Delivery plan & dependencies</h2>
+    <table>
+      <thead><tr><th>Module</th><th>Dependencies</th><th>Estimated dev effort (days)</th></tr></thead>
+      <tbody>
+        <tr><td>Auth</td><td>SMS provider</td><td>5</td></tr>
+        <tr><td>Customer UI</td><td>Auth, Menu API, Payment</td><td>15</td></tr>
+        <tr><td>Merchant Dashboard</td><td>Auth, Menu API, Orders</td><td>12</td></tr>
+        <tr><td>Orders & Dispatch</td><td>Auth, Rider, Maps</td><td>12</td></tr>
+        <tr><td>Payments & Settlement</td><td>PG, Finance schema</td><td>10</td></tr>
+        <tr><td>Referral & Wallet</td><td>Orders, Wallet API, Admin</td><td>8</td></tr>
+        <tr><td>Rider PWA</td><td>Auth, Dispatch, Maps</td><td>8</td></tr>
+        <tr><td>Admin</td><td>Orders, Finance, Referral</td><td>10</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">Total MVP dev days (approx): 80–90 dev-days if done sequentially; split across 2 devs ~ 10–12 weeks as previously estimated.</p>
+  </section>
+
+  <section>
+    <h2>Acceptance testing checklist (per module)</h2>
+    <ul>
+      <li>Authentication: OTP race-condition tested, token expiry validated, role enforcements tested.</li>
+      <li>Customer: add-to-cart edge cases, coupon+coins combination tests, address geocoding accuracy tests.</li>
+      <li>Merchant: menu CRUD tests, order rejection & refund flows, payout file correctness.</li>
+      <li>Payments: webhook replay & idempotency tests, failed payment flows, partial refunds.</li>
+      <li>Referral: ledger uniqueness, coin expiry & redeem tests, cap enforcement.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Next steps & how I can help</h2>
+    <ul>
+      <li>Export this into a printable PDF for stakeholder review.</li>
+      <li>Generate a developer-ready backlog (user stories + acceptance criteria) from these modules.</li>
+      <li>Produce API specification (OpenAPI/Swagger) for all routes listed.</li>
+    </ul>
+  </section>
+
+  <footer style="margin-top:20px;color:#94a3b8;text-align:center">Document prepared for Ambajogai local marketplace. Date: August 10, 2025.</footer>
+</body>
+</html>
